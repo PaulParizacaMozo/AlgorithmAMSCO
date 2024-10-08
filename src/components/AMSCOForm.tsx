@@ -46,83 +46,84 @@ const AMSCOForm: React.FC = () => {
     return mapaPares;
   };
 
-  const cifrarAMSCO = (mensaje: string, clave: string) => {
-    const texto = soloLetras(mensaje);
-    const claveNumerica = obtenerClaveNumerica(clave);
-    const longitudClave = claveNumerica.length;
+const cifrarAMSCO = (mensaje: string, clave: string) => {
+  const texto = soloLetras(mensaje);
+  const claveNumerica = obtenerClaveNumerica(clave);
+  const longitudClave = claveNumerica.length;
 
-    const mapaPares = construirMapaPares(texto, longitudClave);
-    const columnas = Array.from({ length: longitudClave }, () => []);
+  const mapaPares = construirMapaPares(texto, longitudClave);
+  const columnas: string[][] = Array.from({ length: longitudClave }, () => []);
 
-    let index = 0;
-    for (let i = 0; i < mapaPares[0].length; i++) {
-      for (let j = 0; j < longitudClave; j++) {
-        if (mapaPares[j][i] === 1) {
-          columnas[j].push(texto[index++] || '');
-        } else if (mapaPares[j][i] === 2) {
-          columnas[j].push(texto[index++] + (texto[index++] || ''));
-        }
+  let index = 0;
+  for (let i = 0; i < mapaPares[0].length; i++) {
+    for (let j = 0; j < longitudClave; j++) {
+      if (mapaPares[j][i] === 1) {
+        columnas[j].push(texto[index++] || '');
+      } else if (mapaPares[j][i] === 2) {
+        columnas[j].push(texto[index++] + (texto[index++] || ''));
       }
     }
+  }
 
-    const ordenColumnas = [...claveNumerica].map((_, i) => claveNumerica.indexOf(i + 1));
-    const cifrado = ordenColumnas.map((i) => columnas[i].join('')).join('');
+  const ordenColumnas = [...claveNumerica].map((_, i) => claveNumerica.indexOf(i + 1));
+  const cifrado = ordenColumnas.map((i) => columnas[i].join('')).join('');
 
-    // Generar la representación visual del proceso en forma de tabla
-    const representacionTabla: string[][] = [];
-    representacionTabla.push([...clave.toUpperCase()]); // Primera fila con la clave
-    representacionTabla.push(claveNumerica.map((n) => n.toString())); // Segunda fila con el orden numérico
+  // Generar la representación visual del proceso en forma de tabla
+  const representacionTabla: string[][] = [];
+  representacionTabla.push([...clave.toUpperCase()]); // Primera fila con la clave
+  representacionTabla.push(claveNumerica.map((n) => n.toString())); // Segunda fila con el orden numérico
 
-    const maxFilas = Math.max(...columnas.map((col) => col.length));
-    for (let i = 0; i < maxFilas; i++) {
-      representacionTabla.push(columnas.map((col) => col[i] || ''));
+  const maxFilas = Math.max(...columnas.map((col) => col.length));
+  for (let i = 0; i < maxFilas; i++) {
+    representacionTabla.push(columnas.map((col) => col[i] || ''));
+  }
+
+  setSteps(representacionTabla);
+  setProcessType('Cifrado');
+  return cifrado;
+};
+
+const descifrarAMSCO = (cifrado: string, clave: string) => {
+  const texto = soloLetras(cifrado);
+  const claveNumerica = obtenerClaveNumerica(clave);
+  const longitudClave = claveNumerica.length;
+
+  const mapaPares = construirMapaPares(texto, longitudClave);
+  const columnas: string[][] = Array.from({ length: longitudClave }, () => []);
+  let index = 0;
+
+  const ordenColumnas = [...claveNumerica].map((_, i) => claveNumerica.indexOf(i + 1));
+  for (let i = 0; i < longitudClave; i++) {
+    const columna = ordenColumnas[i];
+    for (let j = 0; j < mapaPares[columna].length; j++) {
+      const longitud = mapaPares[columna][j];
+      columnas[columna].push(texto.slice(index, index + longitud).padEnd(longitud, ''));
+      index += longitud;
     }
+  }
 
-    setSteps(representacionTabla);
-    setProcessType('Cifrado');
-    return cifrado;
-  };
-
-  const descifrarAMSCO = (cifrado: string, clave: string) => {
-    const texto = soloLetras(cifrado);
-    const claveNumerica = obtenerClaveNumerica(clave);
-    const longitudClave = claveNumerica.length;
-
-    const mapaPares = construirMapaPares(texto, longitudClave);
-    const columnas = Array.from({ length: longitudClave }, () => []);
-    let index = 0;
-
-    const ordenColumnas = [...claveNumerica].map((_, i) => claveNumerica.indexOf(i + 1));
-    for (let i = 0; i < longitudClave; i++) {
-      const columna = ordenColumnas[i];
-      for (let j = 0; j < mapaPares[columna].length; j++) {
-        const longitud = mapaPares[columna][j];
-        columnas[columna].push(texto.slice(index, index + longitud).padEnd(longitud, ''));
-        index += longitud;
-      }
+  let descifrado = '';
+  for (let i = 0; i < mapaPares[0].length; i++) {
+    for (let j = 0; j < longitudClave; j++) {
+      descifrado += columnas[j][i] || '';
     }
+  }
 
-    let descifrado = '';
-    for (let i = 0; i < mapaPares[0].length; i++) {
-      for (let j = 0; j < longitudClave; j++) {
-        descifrado += columnas[j][i] || '';
-      }
-    }
+  // Generar la representación visual del proceso de descifrado en forma de tabla
+  const representacionTabla: string[][] = [];
+  representacionTabla.push([...clave.toUpperCase()]); // Primera fila con la clave
+  representacionTabla.push(claveNumerica.map((n) => n.toString())); // Segunda fila con el orden numérico
 
-    // Generar la representación visual del proceso de descifrado en forma de tabla
-    const representacionTabla: string[][] = [];
-    representacionTabla.push([...clave.toUpperCase()]); // Primera fila con la clave
-    representacionTabla.push(claveNumerica.map((n) => n.toString())); // Segunda fila con el orden numérico
+  const maxFilas = Math.max(...columnas.map((col) => col.length));
+  for (let i = 0; i < maxFilas; i++) {
+    representacionTabla.push(columnas.map((col) => col[i] || ''));
+  }
 
-    const maxFilas = Math.max(...columnas.map((col) => col.length));
-    for (let i = 0; i < maxFilas; i++) {
-      representacionTabla.push(columnas.map((col) => col[i] || ''));
-    }
+  setSteps(representacionTabla);
+  setProcessType('Descifrado');
+  return descifrado.trim();
+};
 
-    setSteps(representacionTabla);
-    setProcessType('Descifrado');
-    return descifrado.trim();
-  };
 
   const handleEncrypt = () => {
     if (key.length > message.length) {
